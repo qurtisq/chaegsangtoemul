@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @import url("https://use.typekit.net/uud6wru.css");
+
+        body {
+            width: 1280px;
+            height: 1920px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        #searchInput {
+    width: 500px;
+    padding: 10px;
+    font-size: 16px;
+    margin-bottom: 0;
+    border-bottom: 1px solid black;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+        
+
+        .vertical-rectangle-container {
+            display: none;
+            flex-direction: row;
+            margin-top: 0px;
+            align-items: flex-start;
+        }
+
+        .vertical-rectangle {
+            width: 50px;
+            height: 200px;
+            border: 1px solid black;
+            margin-left: 120px;
+            margin-right: 120px;
+        }
+
+        #tableDescription {
+            display: none;
+            margin-top: -265px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <input type="text" id="searchInput" oninput="validateInput(this)" autofocus>
+    <div class="vertical-rectangle-container" id="verticalRectangles">
+        <div class="vertical-rectangle"></div>
+        <div class="vertical-rectangle"></div>
+    </div>
+    <p id="tableDescription">A flat surface, usually supported by four legs, used for putting things on.</p>
+    
+    <script>
+        var timeoutId;
+        var expectedWords = [
+        'table', 'tafel', 'tisch', 'tableau', 'tabela', 'tavolo', 'mesa', 'mensa',
+    'tabula', 'tavla', 'tisch', 'mesa', 'tábla', 'asztal', 'tavolo', 'tábla', 'stôl', 'tafel',
+    'table', 'tavolo', 'tavolo', '桌子', '테이블', 'テーブル', 'stół',
+    // 以下是你提供的其他语言
+    'میز', 'テーブル', 'Mesa', 'طاولة', 'Стол', 'Mesa', 'টেবিল', 'Table', 'Tisch', 'میز', 'テーブル', '탁자', 'Masa', 'Tavolo',
+    'Bàn', 'Meja', 'Tafel', 'Стіл', 'Stół', 'Tavolinë', 'שולחן', 'Bord', 'Mesa', 'Stůl', 'Τραπέζι', 'Asztal', 'Masă', 'Stôl',
+    'Stol', 'Masa', 'Pöytä', 'Meja', 'Bord', 'मेज', 'โต๊ะ', 'Galds', 'Laud', 'Stalas', 'Miza', 'Tisch', 'طاولة', 'طاولة',
+    'Tēpu', 'Borð', 'მაგიდა', 'ገላጭ', 'Meza', 'Tavla', '张', 'Bèn', 'ገላጭ', 'Takalmi', 'Bord', 'តុ', 'Stol', 'Миз', 'Teblong',
+    'Tavola', 'Bedo', 'Borð', 'ٹيبل', 'Sango', 'Isitulu', 'Tabelo', 'Ntsalo', 'Igihimba', 'Tabelo', 'Lesumbela', 'Tabelo', 'Kala',
+    'Kimolo', 'Kwato', 'Khavhudi', 'Pǎlú', 'Āšānka', 'Ẕərṉa', 'Pukpuk', 'Tbl', 'Ngaaŋ', 'Meeʔ', 'Mashkar', 'Bil', 'Ryaru',
+    'Stol', 'Τḗvlu', 'Tébu', 'Tebul', 
+        ];
+
+        // Translations for words
+        var wordDefinitions = {
+    'table': 'A flat surface, usually supported by four legs, used for putting things on.',
+    'tafel': 'Een plat oppervlak, meestal ondersteund door vier poten, gebruikt om dingen op te zetten.',
+    'tisch': 'Eine flache Oberfläche, normalerweise von vier Beinen getragen, zum Abstellen von Dingen verwendet.',
+    'tableau': 'Une surface plate, généralement soutenue par quatre pieds, utilisée pour poser des objets.',
+    'tabela': 'Una superficie piatta, di solito sostenuta da quattro gambe, utilizzata per mettere le cose.',
+    'tavolo': 'Una superficie plana, generalmente sostenida por cuatro patas, utilizada para poner cosas.',
+    'mesa': 'En platt yta, vanligtvis understödd av fyra ben, används för att lägga saker på.',
+    'mensa': 'Egy lapos felület, általában négy láb által támasztva, arra szolgál, hogy dolgokat tegyünk rá.',
+    'tabula': 'Uma superfície plana, geralmente suportada por quatro pernas, usada para colocar coisas.',
+    'tavla': 'En platt yta, vanligtvis understödd av fyra ben, används för att lägga saker på.',
+    'stôl': 'En flad overflade, normalt understøttet af fire ben, bruges til at lægge ting på.',
+    'tafel': 'Eine flache Oberfläche, normalerweise von vier Beinen getragen, zum Abstellen von Dingen verwendet.',
+    'tavolo': 'Una superficie plana, generalmente sostenida por cuatro patas, utilizada para poner cosas.',
+    'tavolo': 'Una superficie plana, generalmente sostenida por cuatro patas, utilizada para poner cosas.',
+    '桌子': '一个平坦的表面，通常由四条腿支撑，用于放置物品。',
+    '테이블': '평평한 표면으로, 일반적으로 네 개의 다리로 지지되어 물건을 올려놓는 데 사용됩니다.',
+    'テーブル': '物を置くために通常は4本の脚で支えられた平らな表面。',
+    'stół': 'Płaska powierzchnia, zazwyczaj podtrzymywana przez cztery nogi, używana do kładzenia rzeczy.',
+    // ... 其他语言 ...
+    'Tébu': 'A flat surface, usually supported by four legs, used for putting things on.',
+    'Yæ̀': 'A flat surface, usually supported by four legs, used for putting things on.',
+    'Tanakan': 'A flat surface, usually supported by four legs, used for putting things on.',
+    'Meja': 'Permukaan datar, biasanya didukung oleh empat kaki, digunakan untuk meletakkan barang.',
+    'Luku': 'Uma superfície plana, geralmente suportada por quatro pernas, usada para colocar coisas.',
+    'Dyodoy': 'A flat surface, usually supported by four legs, used for putting things on.',
+    'Tife': 'A flat surface, usually supported by four legs, used for putting things on.',
+    'Káru': 'A flat surface, usually supported by four legs, used for putting things on.',
+    'Jó': 'A flat surface, usually supported by four legs, used for putting things on.',
+    'Táblẹ': 'A flat surface, usually supported by four legs, used for putting things on.'
+};
+
+
+        function validateInput(input) {
+            clearTimeout(timeoutId);
+            var searchTerm = input.value.trim().toLowerCase();
+            var tableDescription = document.getElementById('tableDescription');
+            var verticalRectangles = document.getElementById('verticalRectangles');
+
+            if (searchTerm.length < 1) {
+                tableDescription.style.display = 'none';
+                verticalRectangles.style.display = 'none';
+                return;
+            }
+
+            timeoutId = setTimeout(function() {
+                var matchedWord = null;
+                var isPrefix = false;
+
+                for (var i = 0; i < expectedWords.length; i++) {
+                    var expectedWord = expectedWords[i].toLowerCase();
+                    
+                    if (expectedWord === searchTerm) {
+                        matchedWord = expectedWord;
+                        isPrefix = false;
+                        break;
+                    } else if (expectedWord.startsWith(searchTerm)) {
+                        matchedWord = expectedWord;
+                        isPrefix = true;
+                        break;
+                    }
+                }
+
+                if (matchedWord) {
+                    if (isPrefix && matchedWord.length > searchTerm.length) {
+                        // Do nothing if the entered part is a prefix of a valid word
+                        tableDescription.style.display = 'none';
+                        verticalRectangles.style.display = 'none';
+                    } else {
+                        // Display the result for a full valid word, including translation if available
+                        tableDescription.innerHTML = wordDefinitions[matchedWord] || wordDefinitions[searchTerm] || 'No description available.';
+                        tableDescription.style.display = 'block';
+                        verticalRectangles.style.display = 'flex';
+                        // Do something with the matched word if needed
+                    }
+                } else {
+                    // Clear the input field if the entered text doesn't match any valid word
+                    input.value = '';
+                    tableDescription.style.display = 'none';
+                    verticalRectangles.style.display = 'none';
+                }
+            }, 290);
+        }
+    </script>
+</body>
+</html>
